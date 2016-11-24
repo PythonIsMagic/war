@@ -122,8 +122,8 @@ class War(object):
 
     def show_topcards(self):
         """ Returns a string showing the top card of each players pile vs the other. """
-        card1 = self.players[1][0].peek()
-        card2 = self.players[2][0].peek()
+        card1 = str(self.players[1][0])
+        card2 = str(self.players[2][0])
         _str = card1 + card2.rjust(30)
         print(_str.center(WIDTH + 28))
 
