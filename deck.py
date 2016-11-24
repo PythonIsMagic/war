@@ -8,12 +8,8 @@ import card
 
 class Deck(object):
     """ Creates a standard 52 card deck, with no Jokers. """
-    def __init__(self, cards=None):
-        if cards is None:
-            self.cards = \
-                [card.Card(r, s[0]) for s in card.SUITS for r in card.RANKS if r != 'Z']
-        else:
-            self.cards = cards
+    def __init__(self):
+        self.cards = [card.Card(r, s[0]) for s in card.SUITS for r in card.RANKS if r != 'Z']
 
     def __str__(self):
         """ Returns a string showing all the cards in the deck. """
