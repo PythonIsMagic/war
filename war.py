@@ -24,7 +24,7 @@ PLAYER1WIN = 1
 PLAYER2WIN = 2
 PLAYING = -1
 SHUFFLES = 10
-WIDTH = 80
+WIDTH = 70
 
 WAR = {
     1: 'WAR',
@@ -63,32 +63,20 @@ class War(object):
             self.players[1].append(_deck.deal())
             self.players[2].append(_deck.deal())
 
-    def decks(self):
+    def show_stacks(self):
         """ Display how many cards are in each players deck. """
-        # Show player 1's deck
-        print('1: {}'.format('#' * len(self.players[1])))
-        # Show player 2's deck
-        print('{}:2'.format('#' * len(self.players[2])).rjust(WIDTH))
-
-    def gameloop(self):
-        """ The main game loop that controls the game flow.  """
-        while True:
-            self.rounds += 1
-            #  print(self)
-            self.decks()
-            self.pause()
-            self.playround()
-            if self.shuffle_between_rounds:
-                self.shuffle()
+        # We'll assume 80 column terminal for now.
+        left = 'P1: '
+        right = ' :P2'
+        stack1 = '#' * len(self.players[1])
+        stack2 = '#' * len(self.players[2])
+        spacing = (WIDTH - 54 - (len(left) + len(right))) * ' '
+        print('{}{}{}{}{}'.format(left, stack1, spacing, stack2, right))
 
     def shuffle(self):
         """ Shuffle each players stack of cards. """
         random.shuffle(self.players[1])
         random.shuffle(self.players[2])
-
-    def pause(self):
-        """ For visibility """
-        time.sleep(self.delay)
 
     def gamestate(self):
         """ Returns a number that indicates the state of the game:
@@ -122,18 +110,30 @@ class War(object):
 
     def show_topcards(self):
         """ Returns a string showing the top card of each players pile vs the other. """
+
         card1 = str(self.players[1][0])
         card2 = str(self.players[2][0])
-        _str = card1 + card2.rjust(30)
-        print(_str.center(WIDTH + 28))
+        _str = card1 + card2.rjust(WIDTH - 10)
+        print(_str.center(WIDTH))
 
     def award_cards(self, player):
         """ Add the compared cards to specified player's stack """
+
         self.players[player].extend(self.spoils)
         self.spoils = []
 
     def playround(self):
         """ Play through one round."""
+        # A War doesn't count as a new round.
+        if self.warlevel == 0:
+            self.rounds += 1
+
+        if self.warlevel == 0:
+            print('Round {}'.format(self.rounds).center(WIDTH))
+        else:
+            wintext = '{}'.format(get_wartext(self.warlevel))
+            print(wintext.center(WIDTH))
+
         if self.gamestate() >= 0:
             self.gameover()
 
@@ -142,12 +142,6 @@ class War(object):
         self.get_spoils(1)
 
         if winner > 0:
-            wintext = 'Player {} wins!'.format(winner).center(WIDTH)
-            if winner == 1:
-                print(wintext)
-            elif winner == 2:
-                print(wintext.rjust(WIDTH))
-
             self.award_cards(winner)
             return winner
 
@@ -164,38 +158,28 @@ class War(object):
             return warwinner
 
     def war(self):
+        """ Executes a round of War when each player ties for rank. If a player
+            doesn't have 4 cards for a standard war, we'll take just enough so
+            they can play war and the determining 2 cards.
         """
-        Executes a round of War when each player ties for rank. If a player doesn't have 4
-        cards for a standard war, we'll take just enough so they can play war and the
-        determining 2 cards.
-        """
-        print(get_wartext(self.warlevel))
 
-        smallerstack = min([len(i) for i in self.players.items()])
+        self.get_spoils(3)
+        print(card_text(self.spoils).center(WIDTH))
 
-        if smallerstack < 4:
-            reducedsize = smallerstack - 1
-            self.get_spoils(reducedsize)
-        else:
-            # Normal war
-            self.get_spoils(3)
-
-        display_cards(self.spoils)
         winner = self.playround()
-
-        wintext = 'Player {} wins war #{}!'.format(winner, self.warlevel)
-        if winner == 1:
-            print(wintext)
-        if winner == 2:
-            print(wintext.rjust(WIDTH))
-
         self.award_cards(winner)
-        # The war is over...
         self.warlevel = 0
         return winner
 
     def get_spoils(self, qty):
-        """ Collects the cards that go into the War pile. """
+        """ Collects the cards that go into the War pile. Cannot add the last
+            card in a players stack.
+        """
+        # Adjust for a very shallow stack.
+        smallerstack = min([len(i) for i in self.players.values()])
+        if smallerstack < qty:
+            qty = smallerstack - 1
+
         for _ in range(qty):
             if self.gamestate() >= 0:
                 self.gameover()
@@ -232,23 +216,23 @@ class War(object):
             print('\t{}: {}x'.format(get_wartext(k), v))
 
 
-def display_cards(cardlist):
-    """
-    Returns a string representing the cards in the list.
-    """
-    _str = ''
-    for c in cardlist:
-        _str += str(c) + ' '
-    return _str
+def card_text(cardlist):
+    """ Returns a string representing the cards in the list. """
+    return '[' + ' '.join(str(c) for c in cardlist) + ']'
 
 
 def get_wartext(level):
-    """
-    Display the correct text for when a round hits any level of War.
-    """
-    expoints = 2 * (level + 1)
-    return '{}{}'.format(WAR[level], '!' * expoints)
+    """ Display the correct text for when a round hits any level of War.  """
+    exclaimations = 2 * (level + 1)
+    return '{}{}'.format(WAR[level], '!' * exclaimations)
+
 
 if __name__ == '__main__':
+    # The main game loop that controls the game flow.
     GAME = War()
-    GAME.gameloop()
+    while True:
+        GAME.show_stacks()
+        time.sleep(GAME.delay)
+        GAME.playround()
+        if GAME.shuffle_between_rounds:
+            GAME.shuffle()
