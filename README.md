@@ -1,6 +1,7 @@
 Python War
 ===============
 > Console simulation of the all-time favorite War card game!
+![](war_end2.png)
 
 ## Notes
 - Automatically plays through
