@@ -58,14 +58,12 @@ class War(object):
         for _ in range(SHUFFLES):
             _deck.shuffle()
 
-        # Deal out the shuffled deck to both players
         while len(_deck) > 0:
             self.players[1].append(_deck.deal())
             self.players[2].append(_deck.deal())
 
     def show_stacks(self):
         """ Display how many cards are in each players deck. """
-        # We'll assume 80 column terminal for now.
         left = 'P1: '
         right = ' :P2'
         stack1 = '#' * len(self.players[1])
@@ -124,6 +122,9 @@ class War(object):
 
     def playround(self):
         """ Play through one round."""
+        if self.gamestate() >= 0:
+            self.gameover()
+
         # A War doesn't count as a new round.
         if self.warlevel == 0:
             self.rounds += 1
@@ -133,9 +134,6 @@ class War(object):
         else:
             wintext = '{}'.format(get_wartext(self.warlevel))
             print(wintext.center(WIDTH))
-
-        if self.gamestate() >= 0:
-            self.gameover()
 
         self.show_topcards()
         winner = self.get_winner()
